@@ -1,37 +1,49 @@
 import React, { useEffect, useState } from 'react'
-import { useSpeechSynthesis } from 'react-speech-kit';
-import { useSpeechRecognition } from 'react-speech-kit';
-
+// import { useSpeechSynthesis } from 'react-speech-kit';
+// import { useSpeechRecognition } from 'react-speech-kit';
+import SpeechKit from '@mastashake08/speech-kit';
 function App() {
-  const { speak } = useSpeechSynthesis()
+  const [text, setText] = useState('');
+  const [speechKit, setSpeechKit] = useState(null);
+  const [listen, setListen] = useState(false)
 
-  const [value, setValue] = useState('');
-  const { listen, listening, stop } = useSpeechRecognition({
-    onResult: (result) => {
-      setValue(result);
-    },
-  });
-  useEffect(() => {
-    if (value.includes("빵빵")) {
-      setTimeout(() => {
-        alert("빵빵 인식 성공!!")
-      }, 2000);
+  // SpeechKit 인스턴스를 생성합니다
+  const initializeSpeechKit = () => {
+    const options = {
+      continuous: true,  // 음성 인식을 지속적으로 수행
+      interimResults: true,  // 중간 결과를 반환
+      pitch: 1.2,  // 음성의 높이
+      rate: 1.0,  // 음성의 속도
+    };
+
+    const kit = new SpeechKit(options);
+    setSpeechKit(kit);
+  };
+
+  const handleSpeak = () => {
+    if (speechKit) {
+      speechKit.speak(text);
     }
-  }, [value])
+  };
+
+  React.useEffect(() => {
+    initializeSpeechKit();
+  }, []);
+
   return (
     <div>
-      <button onClick={() => speak({ text: value })}>음성 test</button>
+      <button onClick={() => speechKit.speak(text)}>음성 test</button>
       <div>
         <textarea
-          value={value}
-          onChange={(event) => setValue(event.target.value)}
+          value={text}
+          onChange={(event) => setText(event.target.value)}
         />
-        <button onClick={() => { listen({ interimResults: false }) }} >
+        <button onClick={() => speechKit.listen({ interimResults: false })} >
           🎤
         </button>
-        <button onClick={stop}>취소</button>
-        {listening && <div>듣고있어요!</div>}
-        <div>사용자가 한말 : <span>{`" ${value} "`}</span></div>
+        <button onClick={() => { speechKit.stopListen() }}>취소</button>
+        {listen && <div>듣고있어요!</div>}
+        <div>사용자가 한말 : <span>{`" ${text} "`}</span></div>
       </div>
     </div>
   )
